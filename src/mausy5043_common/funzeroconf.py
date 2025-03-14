@@ -46,8 +46,6 @@ APPROOT = "/".join(HERE[0:-3])
 NODE = os.uname()[1]
 # fmt: on
 
-DISCOVERED: dict = {}
-
 
 class MyListener(ServiceListener):
     r"""
@@ -91,13 +89,16 @@ class MyListener(ServiceListener):
     ip = 192:168:2:240
     """
 
+    def __init__(self) -> None:
+        self.discovered = {}
+
     def remove_service(self, zc: Zeroconf, type_: str, name: str) -> None:
         """Forget services that disappear during the discovery scan."""
         _name = name.replace(" ", "_")
         __name = _name.split(".")[0]
         LOGGER.debug(f"(  -) Service {__name} {type_} disappeared.")
-        if __name in DISCOVERED:
-            del DISCOVERED[__name]
+        if __name in self.discovered:
+            del self.discovered[__name]
 
     def update_service(self, zc: Zeroconf, type_: str, name: str) -> None:
         """Update information for services that send updates.
@@ -120,8 +121,8 @@ class MyListener(ServiceListener):
                     f"Exception for device info: {info}\n {info.properties}\n {info.addresses}\n"
                 )
                 raise
-        if (__name in DISCOVERED) and (__type in DISCOVERED[__name]):
-            DISCOVERED[__name][__type] = {
+        if (__name in self.discovered) and (__type in self.discovered[__name]):
+            self.discovered[__name][__type] = {
                 "ip": svc,
                 "name": name,
                 "type": type_,
@@ -149,8 +150,8 @@ class MyListener(ServiceListener):
                 raise
         LOGGER.debug(f"(+  ) Service {__name} discovered ( {__type} ) on {svc}")
         # register the device
-        if __name not in DISCOVERED:
-            DISCOVERED[__name] = {
+        if __name not in self.discovered:
+            self.discovered[__name] = {
                 f"{__type}": {
                     "ip": svc,
                     "name": name,
@@ -160,8 +161,8 @@ class MyListener(ServiceListener):
                 }
             }
         # additional services discovered for an already discovered device
-        if __type not in DISCOVERED[__name]:
-            DISCOVERED[__name][__type] = {
+        if __type not in self.discovered[__name]:
+            self.discovered[__name][__type] = {
                 "ip": svc,
                 "name": name,
                 "type": type_,
@@ -195,11 +196,13 @@ class MyListener(ServiceListener):
         return normdict
 
 
-def get_ip(service: str, filtr: str) -> list[str]:
+def get_ip(service: str, filtr: str = '', timeout: float = 30.0) -> list[str]:
     """Discover and retrieve IP addresses for a given service.
     Args:
         service (str): The name of the service to discover.
         filtr (str): A filter string to match specific services.
+        timeout (float): The maximum time in seconds to wait for the discovery to complete.
+
     Returns:
         list[str]: A list of IP addresses that match the given service and filter.
     """
@@ -215,14 +218,17 @@ def get_ip(service: str, filtr: str) -> list[str]:
 
     t0: float = time.time()
     dt: float = 0.0
-    while (dt < 10.0) or not DISCOVERED:
+    while dt < timeout:  # and not _ls.discovered:
         dt = time.time() - t0
     _zc.close()
     LOGGER.debug("Discovery done.")
-    LOGGER.debug(json.dumps(DISCOVERED, indent=4))
-    for _i in DISCOVERED:  # pylint: disable=consider-using-dict-items
-        if filtr and filtr == DISCOVERED[_i][service]['service']:
-            _ip.append(DISCOVERED[_i][service]["ip"])
+    LOGGER.debug(json.dumps(_ls.discovered, indent=4))
+    if _ls.discovered:
+        for _i in _ls.discovered:  # pylint: disable=consider-using-dict-items
+            if filtr and filtr == _ls.discovered[_i][service]['service']:
+                _ip.append(_ls.discovered[_i][service]["ip"])
+            if not filtr:
+                _ip.append(_ls.discovered[_i][service]["ip"])
     return _ip
 
 
