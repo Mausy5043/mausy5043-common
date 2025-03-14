@@ -48,8 +48,7 @@ NODE = os.uname()[1]
 
 
 class MyListener(ServiceListener):
-    r"""
-    Overloaded class of zeroconf.ServiceListener.
+    r"""Overloaded class of zeroconf.ServiceListener.
 
     Examples of output:
     Service DABMAN i205 CDCCai6fu6g4c4ZZ._http._tcp.local. discovered
@@ -90,7 +89,8 @@ class MyListener(ServiceListener):
     """
 
     def __init__(self) -> None:
-        self.discovered = {}
+        """Initialise the listener."""
+        self.discovered: dict = {}
 
     def remove_service(self, zc: Zeroconf, type_: str, name: str) -> None:
         """Forget services that disappear during the discovery scan."""
@@ -102,7 +102,9 @@ class MyListener(ServiceListener):
 
     def update_service(self, zc: Zeroconf, type_: str, name: str) -> None:
         """Update information for services that send updates.
-        Overridden but not used."""
+
+        Overridden but not used.
+        """
         _name = name.replace(" ", "_")
         __name = _name.split(".")[0]
         __type = type_.split(".")[0]
@@ -198,6 +200,7 @@ class MyListener(ServiceListener):
 
 def get_ip(service: str, filtr: str = '', timeout: float = 30.0) -> list[str]:
     """Discover and retrieve IP addresses for a given service.
+
     Args:
         service (str): The name of the service to discover.
         filtr (str): A filter string to match specific services.
@@ -206,7 +209,6 @@ def get_ip(service: str, filtr: str = '', timeout: float = 30.0) -> list[str]:
     Returns:
         list[str]: A list of IP addresses that match the given service and filter.
     """
-
     _ip: list[str] = []
     _zc = Zeroconf()
     _ls = MyListener()
