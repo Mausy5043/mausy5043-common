@@ -15,7 +15,7 @@ import sys
 import time
 from typing import Any
 
-from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
+from zeroconf import ServiceBrowser, ServiceListener, Zeroconf, ZeroconfServiceTypes
 
 # initialize logging
 __is_macos = platform.system() == "Darwin"
@@ -44,10 +44,13 @@ MYAPP = HERE[-4]
 MYROOT = "/".join(HERE[0:-4])
 APPROOT = "/".join(HERE[0:-3])
 NODE = os.uname()[1]
+
+LOCAL_DIR: str = f"{os.getenv('HOME')}/.local"
+DEVICE_FILE: str = f"{LOCAL_DIR}/devices.json"
 # fmt: on
 
 
-class MyListener(ServiceListener):
+class ZcsListener(ServiceListener):
     r"""Overloaded class of zeroconf.ServiceListener.
 
     Examples of output:
@@ -59,7 +62,7 @@ class MyListener(ServiceListener):
                 weight=0,
                 priority=0,
                 server='http-DABMAN i205 CDCCai6fu6g4c4ZZ.local.',
-                properties={b'path': b'/irdevice.xml,CUST_APP=0,BRAND=IMPERIAL,MAC=____________'},
+                properties={b'path': b'/irdevice.xml,CUST_APP=0,BRAND=IMPERIAL,MAC=3475638B4984'},
                 interface_index=None)
     ip = 192:168:2:149
 
@@ -101,10 +104,7 @@ class MyListener(ServiceListener):
             del self.discovered[__name]
 
     def update_service(self, zc: Zeroconf, type_: str, name: str) -> None:
-        """Update information for services that send updates.
-
-        Overridden but not used.
-        """
+        """Overridden but not used."""
         _name = name.replace(" ", "_")
         __name = _name.split(".")[0]
         __type = type_.split(".")[0]
@@ -119,7 +119,7 @@ class MyListener(ServiceListener):
                 if info.addresses:
                     svc = ".".join(list(map(str, list(info.addresses[0]))))
             except BaseException:
-                LOGGER.debug(
+                LOGGER.error(
                     f"Exception for device info: {info}\n {info.properties}\n {info.addresses}\n"
                 )
                 raise
@@ -146,7 +146,7 @@ class MyListener(ServiceListener):
                 if info.addresses:
                     svc = ".".join(list(map(str, list(info.addresses[0]))))
             except BaseException:
-                LOGGER.debug(
+                LOGGER.error(
                     f"Exception for device info: {info}\n {info.properties}\n {info.addresses}\n"
                 )
                 raise
@@ -158,7 +158,6 @@ class MyListener(ServiceListener):
                     "ip": svc,
                     "name": name,
                     "type": type_,
-                    "service": prop["product_type"],
                     "properties": prop,
                 }
             }
@@ -168,21 +167,12 @@ class MyListener(ServiceListener):
                 "ip": svc,
                 "name": name,
                 "type": type_,
-                "service": prop["product_type"],
                 "properties": prop,
             }
 
     @staticmethod
     def debyte(bytedict: Any) -> dict[str, str]:
-        """Transform a dictionary with byte keys and values to a dictionary with string keys and values.
-
-        Args:
-            bytedict (Any): A dictionary where both keys and values are bytes. It may also be empty or None.
-
-        Returns:
-            dict[str, str]: A dictionary where both keys and values are strings. If a value in the input dictionary is None,
-                            the corresponding value in the output dictionary will also be None. Empty keys are ignored.
-        """
+        """Transform a dict of bytes to a dict of strings."""
         normdict = {}
         if bytedict:
             # bytedict may be empty or None
@@ -198,7 +188,56 @@ class MyListener(ServiceListener):
         return normdict
 
 
-def get_ip(service: str, filtr: str = '', timeout: float = 30.0) -> list[str]:
+def save_discovery(disco_dict: dict) -> None:
+    """Save the discovered services and info to a file."""
+    LOGGER.debug("saving...")
+    disco_str = json.dumps(disco_dict, indent=4, sort_keys=True)
+    with open(DEVICE_FILE, "w", encoding="utf-8") as fp:
+        fp.write(disco_str)
+
+
+def discover_devices(search_time: float = 60.0) -> dict:
+    """Discover services on the network using Zeroconf.
+
+    This function uses the Zeroconf protocol to detect network services
+    available within the local network. It initializes a Zeroconf instance
+    and a listener, browses available service types, and collects
+    information on discovered services over a fixed time period.
+
+    The discovery process runs for 60 seconds, during which all
+    network-discoverable services are identified and logged. The function
+    returns a dictionary containing the details of all discovered services.
+
+    Args:
+        search_time (float): The time in seconds to search for services on
+                             the network. The default value is 60.0.
+
+    Returns:
+        dict: A dictionary containing the discovered services and their details.
+
+    Raises: Nothing
+    """
+    _zc = Zeroconf()
+    _ls = ZcsListener()
+    service_list = ZeroconfServiceTypes.find()
+    browsers = []
+    for _service in service_list:
+        LOGGER.debug(f"(   ) Listening for service: {_service}")
+        browsers.append(ServiceBrowser(_zc, _service, _ls))
+
+    t0: float = time.time()
+    dt: float = 0.0
+    while dt < search_time:
+        dt = time.time() - t0
+
+    _zc.close()
+
+    if DEBUG:
+        save_discovery(_ls.discovered)
+    return _ls.discovered
+
+
+def get_ip(service: str, filtr: str = '', timeout: float = 60.0) -> list[str]:
     """Discover and retrieve IP addresses for a given service.
 
     Args:
@@ -210,35 +249,58 @@ def get_ip(service: str, filtr: str = '', timeout: float = 30.0) -> list[str]:
         list[str]: A list of IP addresses that match the given service and filter.
     """
     _ip: list[str] = []
-    _zc = Zeroconf()
-    _ls = MyListener()
-    _service = service
-    if "_tcp.local." not in _service:
-        _service = "".join([service, "._tcp.local."])
-    # find the service:
-    _ = ServiceBrowser(_zc, _service, _ls)
-
-    t0: float = time.time()
-    dt: float = 0.0
-    while dt < timeout:  # and not _ls.discovered:
-        dt = time.time() - t0
-    _zc.close()
+    _devices: dict = discover_devices(search_time=timeout)
     LOGGER.debug("Discovery done.")
-    LOGGER.debug(json.dumps(_ls.discovered, indent=4))
-    if _ls.discovered:
-        for _i in _ls.discovered:  # pylint: disable=consider-using-dict-items
-            if filtr and filtr == _ls.discovered[_i][service]['service']:
-                _ip.append(_ls.discovered[_i][service]["ip"])
-            if not filtr:
-                _ip.append(_ls.discovered[_i][service]["ip"])
+    LOGGER.debug(f"Found {len(_devices)} devices in total. Pruning and filtering...")
+    _devices = prune_services(_devices, service)
+    if filtr:
+        _devices = filter_properties(_devices, service, filtr)
+    for _d in _devices:
+        print(_d)
+        _ip.append(_devices[_d][service]["ip"])
+
     return _ip
+
+
+def prune_services(devices: dict, service: str) -> dict:
+    """Remove devices that do not provide a specific service."""
+    LOGGER.debug(f"Looking for devices providing '{service}'")
+    for device in list(devices.keys()):
+        if service not in devices[device]:
+            del devices[device]
+    return devices
+
+
+def filter_properties(devices: dict, service: str, filtr: str) -> dict:
+    """Filter devices based on property contents."""
+    devices_to_remove = []
+    LOGGER.debug(f"Looking for devices matching '{filtr}' in {service}")
+    for device, services in devices.items():
+        for service_type, service_data in services.items():
+            if service_type == service:
+                # Check if any property contains the filter; exit early if found
+                if any(filtr in value for value in service_data["properties"].values()):
+                    print(f"Found {filtr} in {device} with IP {service_data['ip']}")
+                    break
+                else:
+                    # Mark the device for removal if filter not found
+                    devices_to_remove.append(device)
+                    break
+
+    # Remove marked devices
+    for device in devices_to_remove:
+        del devices[device]
+
+    return devices
 
 
 if __name__ == "__main__":
     # initialise logging to console
+    DEBUG = True
     LOGGER.addHandler(logging.StreamHandler(sys.stdout))
     LOGGER.level = logging.DEBUG
 
     LOGGER.debug("Debug-mode started.")
-    LOGGER.debug(f"IP = {get_ip(service='_hwenergy', filtr='HWE-WTR')}")
+    LOGGER.debug(f"IP = {get_ip(service='_hwenergy', filtr='HWE-P1')}")
+    # discover_devices()
     LOGGER.debug("...done")
