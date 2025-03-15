@@ -256,7 +256,6 @@ def get_ip(service: str, filtr: str = '', timeout: float = 60.0) -> list[str]:
     if filtr:
         _devices = filter_properties(_devices, service, filtr)
     for _d in _devices:
-        print(_d)
         _ip.append(_devices[_d][service]["ip"])
 
     return _ip
@@ -280,7 +279,7 @@ def filter_properties(devices: dict, service: str, filtr: str) -> dict:
             if service_type == service:
                 # Check if any property contains the filter; exit early if found
                 if any(filtr in value for value in service_data["properties"].values()):
-                    print(f"Found {filtr} in {device} with IP {service_data['ip']}")
+                    LOGGER.debug(f"Found {filtr} in {device} with IP {service_data['ip']}")
                     break
                 else:
                     # Mark the device for removal if filter not found
