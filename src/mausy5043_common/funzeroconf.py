@@ -257,7 +257,6 @@ def get_ip(service: str, filtr: str = '', timeout: float = 60.0) -> list[str]:
         _devices = filter_properties(_devices, service, filtr)
     for _d in _devices:
         _ip.append(_devices[_d][service]["ip"])
-
     return _ip
 
 
