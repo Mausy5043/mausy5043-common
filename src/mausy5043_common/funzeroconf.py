@@ -7,7 +7,6 @@
 """Discover Multi-cast devices that support Homewizard."""
 
 import json
-import logging
 import logging.handlers
 import os
 import platform
