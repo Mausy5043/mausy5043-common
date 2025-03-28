@@ -252,7 +252,7 @@ def get_ip(service: str, filtr: str = '', timeout: float = 60.0) -> list[str]:
     _devices: dict = discover_devices(search_time=timeout)
     LOGGER.debug("Discovery done.")
     LOGGER.debug(f"Found {len(_devices)} devices in total. Pruning and filtering...")
-    _devices = prune_services(_devices, service)
+    _devices = prune_services(_devices, [service])
     if filtr:
         _devices = filter_properties(_devices, service, filtr)
     for _d in _devices:
@@ -260,7 +260,7 @@ def get_ip(service: str, filtr: str = '', timeout: float = 60.0) -> list[str]:
     return _ip
 
 
-def prune_services(devices: dict, service: str) -> dict:
+def prune_services(devices: dict, services: list[str]) -> dict:
     """Remove devices that do not provide a specific service."""
     LOGGER.debug(f"Looking for devices providing '{service}'")
     for device in list(devices.keys()):
