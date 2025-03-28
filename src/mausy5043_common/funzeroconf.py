@@ -18,10 +18,10 @@ from typing import Any
 from zeroconf import ServiceBrowser, ServiceListener, Zeroconf, ZeroconfServiceTypes
 
 # initialize logging
-__is_macos = platform.system() == "Darwin"
+__is_macos: bool = platform.system() == "Darwin"
 __hndlrs: list = []
 if not __is_macos:
-    hndlrs = [
+    hndlrs: list = [
         logging.handlers.SysLogHandler(
             address="/dev/log",
             facility=logging.handlers.SysLogHandler.LOG_DAEMON,
@@ -37,13 +37,13 @@ LOGGER: logging.Logger = logging.getLogger(__name__)
 
 # fmt: off
 # constants
-DEBUG = False
-HERE = os.path.realpath(__file__).split("/")
-MYID = HERE[-1]
-MYAPP = HERE[-4]
-MYROOT = "/".join(HERE[0:-4])
-APPROOT = "/".join(HERE[0:-3])
-NODE = os.uname()[1]
+DEBUG: bool = False
+HERE: list = os.path.realpath(__file__).split("/")
+MYID: str = HERE[-1]
+MYAPP: str = HERE[-4]
+MYROOT: str = "/".join(HERE[0:-4])
+APPROOT: str = "/".join(HERE[0:-3])
+NODE: str = os.uname()[1]
 
 LOCAL_DIR: str = f"{os.getenv('HOME')}/.local"
 DEVICE_FILE: str = f"{LOCAL_DIR}/devices.json"
