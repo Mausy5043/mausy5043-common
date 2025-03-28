@@ -262,9 +262,9 @@ def get_ip(service: str, filtr: str = '', timeout: float = 60.0) -> list[str]:
 
 def prune_services(devices: dict, services: list[str]) -> dict:
     """Remove devices that do not provide a specific service."""
-    LOGGER.debug(f"Looking for devices providing '{service}'")
+    LOGGER.debug(f"Looking for devices providing '{services}'")
     for device in list(devices.keys()):
-        if service not in devices[device]:
+        if not any(service in devices[device] for service in services):
             del devices[device]
     return devices
 
