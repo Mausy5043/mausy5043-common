@@ -298,6 +298,6 @@ if __name__ == "__main__":
     LOGGER.level = logging.DEBUG
 
     LOGGER.debug("Debug-mode started.")
-    LOGGER.debug(f"IP = {get_ip(service='_hwenergy', filtr='HWE-P1')}")
-    # discover_devices()
+    LOGGER.debug(f"IP = {get_ip(service='_homewizard', filtr='HWE-P1')}")
+    # print(json.dumps(discover_devices(), indent=4, sort_keys=True))
     LOGGER.debug("...done")
