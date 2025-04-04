@@ -9,8 +9,8 @@
 """Common functions for use with HomeWizard devices using."""
 
 import asyncio
-import logging
 import json
+import logging
 
 import homewizard_energy.models as hwem
 from homewizard_energy import HomeWizardEnergyV1, HomeWizardEnergyV2
@@ -247,8 +247,6 @@ class MyHomeWizard:
 
 if __name__ == "__main__":
     # Test the HomeWizard class
-    import json
-
     test_serial = "5c2faf193aca"
     test_token = "your_token_goes_here"  # nosec B105:hardcoded_password_string
     hwe = MyHomeWizard(serial=test_serial, token=test_token, debug=True)
