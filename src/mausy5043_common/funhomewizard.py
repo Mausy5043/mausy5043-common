@@ -224,9 +224,7 @@ class MyHomeWizard:
             asyncio.run(self.connection.aget_device())
         self.api_version = self.connection.api_version
         LOGGER.info(f"Connected to API/{self.api_version} on device: {self.target_device}")
-        LOGGER.info(
-            f"Device info: {json.dumps(self.connection.dev_device, indent=2, sort_keys=True)}"
-        )
+        LOGGER.info(f"Device info: {self.connection.dev_device}")
 
     def get_measurement(self) -> hwem.Measurement | None:
         """Get the measurement from the HomeWizard device.
