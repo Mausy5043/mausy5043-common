@@ -6,7 +6,7 @@
 
 # https://api-documentation.homewizard.com/docs/category/api-v1
 
-"""Common functions for use with HomeWizard devices using."""
+"""Common functions for use with HomeWizard devices."""
 
 import asyncio
 import json
