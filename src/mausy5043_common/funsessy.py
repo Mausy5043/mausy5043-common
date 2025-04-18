@@ -13,6 +13,16 @@ from sessypy.devices import SessyBattery, SessyDevice, SessyP1Meter, get_sessy_d
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
+SESSY_BATTERY1_HOST = ""
+SESSY_BATTERY1_USERNAME = ""
+SESSY_BATTERY1_PASSWORD = ""
+SESSY_BATTERY2_HOST = ""
+SESSY_BATTERY2_USERNAME = ""
+SESSY_BATTERY2_PASSWORD = ""
+SESSY_P1_HOST = ""
+SESSY_P1_USERNAME = ""
+SESSY_P1_PASSWORD = ""
+
 
 async def run():
     devices = list()
