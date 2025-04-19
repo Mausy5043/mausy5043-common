@@ -24,9 +24,6 @@ except ImportError:
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
-D_FORMAT = "%Y-%m-%d"
-DT_FORMAT = "%Y-%m-%d %H:%M:%S"
-
 SUPPORTED_SERVICES = {"v1": "_hwenergy", "v2": "_homewizard"}
 SUPPORTED_VERSIONS = {_v: _k for _k, _v in SUPPORTED_SERVICES.items()}
 
@@ -44,8 +41,6 @@ class HomeWizard_V1:  # pylint: disable=too-many-instance-attributes
 
         self.dev_device: hwem.Device | None = None
         self.dev_measurement: hwem.Measurement | None = None
-
-        self.dt_format: str = DT_FORMAT
 
     async def aget_device(self) -> None:
         """Get basic device information, like firmware version."""
