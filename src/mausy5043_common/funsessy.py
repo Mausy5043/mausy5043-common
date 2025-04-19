@@ -9,77 +9,133 @@
 import asyncio
 import logging
 
-from sessypy.devices import SessyBattery, SessyDevice, SessyP1Meter, get_sessy_device
+from sessypy.devices import get_sessy_device
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
-SESSY_BATTERY1_HOST = ""
-SESSY_BATTERY1_USERNAME = ""
-SESSY_BATTERY1_PASSWORD = ""
-SESSY_BATTERY2_HOST = ""
-SESSY_BATTERY2_USERNAME = ""
-SESSY_BATTERY2_PASSWORD = ""
-SESSY_P1_HOST = ""
-SESSY_P1_USERNAME = ""
-SESSY_P1_PASSWORD = ""
 
+class Sessy_v1:  # pylint: disable=too-many-instance-attributes
+    """Class to interact with the Sessy Battery."""
 
-async def run():
-    devices = list()
+    def __init__(self, ip: str, username: str, password: str, debug: bool = False) -> None:
+        """."""
+        self.api_version: str = "v1"
+        self.ip: str = ip
+        self.dev_name: str = ""
+        self.dev_ota: str = ""
+        self.username: str = username
+        self.password: str = password
+        self.debug: bool = debug
 
-    devices.append(
-        await get_sessy_device(
-            SESSY_BATTERY1_HOST, SESSY_BATTERY1_USERNAME, SESSY_BATTERY1_PASSWORD
+        self.dev_device = None
+        self.dev_measurement = None
+
+    async def aget_device(self) -> None:
+        """Get basic device information, like firmware version."""
+        self.dev_device = await get_sessy_device(
+            host=self.ip, username=self.username, password=self.password
         )
-    )
-    devices.append(
-        await get_sessy_device(
-            SESSY_BATTERY2_HOST, SESSY_BATTERY2_USERNAME, SESSY_BATTERY2_PASSWORD
+        self.dev_ota = await self.dev_device.get_ota_status()
+        self.dev_name = self.dev_device.serial_number
+        await self.dev_device.close()
+        LOGGER.debug("")
+
+    async def aget_measurement(self) -> None:
+        """Fetch a telegram from the P1 dongle."""
+        # async with HomeWizardEnergyV1(host=self.ip) as _api:
+        # Get measurements
+        self.dev_device = await get_sessy_device(
+            host=self.ip, username=self.username, password=self.password
         )
-    )
-    devices.append(await get_sessy_device(SESSY_P1_HOST, SESSY_P1_USERNAME, SESSY_P1_PASSWORD))
-    device: SessyDevice
-    for device in devices:
-        print(f"=== Sessy Device at {device.host} ===")
-        print(f"S/N: {device.serial_number}")
-        print("- Network status -")
-        result = await device.get_network_status()
-        print(result)
-        print("")
-
-        print("- Software update status -")
-        result = await device.get_ota_status()
-        print(result)
-        print("")
-
-        if isinstance(device, SessyBattery):
-            print("- Power Status -")
-            result = await device.get_power_status()
-            print(result)
-            print("")
-
-            print("- Power Strategy -")
-            result = await device.get_power_strategy()
-            print(result)
-            print("")
-
-            print("- System settings -")
-            result = await device.get_system_settings()
-            print(result)
-            print("")
-
-            print("- Dynamic mode schedule -")
-            result = await device.get_dynamic_schedule()
-            print(result)
-            print("")
-
-        elif isinstance(device, SessyP1Meter):
-            print("- P1 Status -")
-            result = await device.get_p1_details()
-            print(result)
-            print("")
-
-        await device.close()
+        self.dev_measurement = await self.dev_device.get_power_status()
+        await self.dev_device.close()
+        LOGGER.debug(self.dev_measurement)
+        LOGGER.debug("---")
 
 
-asyncio.run(run())
+class MySessyBattery:
+    """Class to interact with the Home Wizard devices, regardless of the API version.
+
+    This class is designed to discover HomeWizard devices on the network and
+    establish a connection to the appropriate API version based on the device's
+    capabilities. It handles the discovery of devices, filtering them based on
+    supported services, and finding a specific device by its serial number.
+    The class also provides a method to connect to the device using the
+    appropriate API version (v1 or v2).
+    """
+
+    def __init__(self, ip: str, user: str, token: str, debug: bool = False) -> None:
+        """Initialize the MySessyBattery class.
+
+        Args:
+            ip (str): The IP of the battery.
+            user (str): The username for the battery.
+            token (str): The password for the battery.
+            debug (bool, optional): If True, debugging mode is enabled.
+
+        """
+        self.debug = debug
+        self.ip = ip
+        self.username = user
+        self.password = token
+        self.connection = None
+        self.api_version: str = "unknown"
+
+    def connect(self) -> None:
+        """Acquire a connection to the HomeWizard device."""
+        self.connection = Sessy_v1(
+            ip=self.ip, username=self.username, password=self.password, debug=self.debug
+        )
+        if self.connection:
+            asyncio.run(self.connection.aget_device())
+        else:
+            raise ValueError("No connection to battery established.")
+        LOGGER.info(f"Connected to device: {self.connection.dev_name}")
+        LOGGER.info(f"Device info: {self.connection.dev_ota}")
+
+    def get_measurement(self):
+        """Get the measurement from the HomeWizard device.
+
+        This method retrieves the measurement data from the connected HomeWizard
+        device. It uses the appropriate API version (v1 or v2) to fetch the
+        measurement data and translates it into a dictionary format.
+
+        Returns:
+            dict: A dictionary containing the translated measurement data.
+        """
+        if self.connection:
+            asyncio.run(self.connection.aget_measurement())
+        else:
+            raise ValueError("No connection to battery established.")
+        return self.connection.dev_measurement
+
+
+if __name__ == "__main__":
+    import json
+    import os
+    import sys
+
+    _MYHOME: str = os.environ["HOME"]
+    config_file = f"{_MYHOME}/.config/sessy.json"
+    # process config file
+    try:
+        with open(config_file, encoding="utf-8") as _json_file:
+            _cfg = json.load(_json_file)
+    except FileNotFoundError:
+        LOGGER.error(f"'{config_file}' not found.")
+        sys.exit(1)
+    except json.JSONDecodeError:
+        LOGGER.error("Error decoding JSON config file.")
+        sys.exit(1)
+    try:
+        bat_ip: str = _cfg["bat1"]["ip"]
+        bat_usr: str = _cfg["bat1"]["username"]
+        bat_pwd: str = _cfg["bat1"]["password"]
+    except KeyError as her:
+        LOGGER.error(f"KeyError: {her}")
+        LOGGER.error("Please check the config file.")
+        sys.exit(1)
+    # Test the Sessy class
+    myses = MySessyBattery(ip=bat_ip, user=bat_usr, token=bat_pwd, debug=True)
+    myses.connect()
+    print(json.dumps(myses.get_measurement(), indent=4, sort_keys=True))
