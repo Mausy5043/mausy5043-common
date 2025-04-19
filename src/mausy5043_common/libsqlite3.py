@@ -16,17 +16,6 @@ import pandas as pd
 
 DT_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(module)s.%(funcName)s [%(levelname)s] - %(message)s",
-    datefmt=DT_FORMAT,
-    handlers=[
-        logging.handlers.SysLogHandler(
-            address="/dev/log",
-            facility=logging.handlers.SysLogHandler.LOG_DAEMON,
-        )
-    ],
-)
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
