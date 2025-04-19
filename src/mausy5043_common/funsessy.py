@@ -9,7 +9,10 @@
 import asyncio
 import logging
 
-from sessypy.devices import get_sessy_device
+from sessypy.devices import (  # type: ignore[import-untyped]
+    SessyDevice,
+    get_sessy_device,
+)
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -21,22 +24,26 @@ class Sessy_v1:  # pylint: disable=too-many-instance-attributes
         """."""
         self.api_version: str = "v1"
         self.ip: str = ip
-        self.dev_name: str = ""
-        self.dev_ota: str = ""
+        self.dev_name: str = "unknown"
+        self.dev_ota: dict = {}
         self.username: str = username
         self.password: str = password
         self.debug: bool = debug
 
-        self.dev_device = None
-        self.dev_measurement = None
+        self.dev_device: SessyDevice | None = None
+        self.dev_measurement: dict = {}
 
     async def aget_device(self) -> None:
         """Get basic device information, like firmware version."""
         self.dev_device = await get_sessy_device(
             host=self.ip, username=self.username, password=self.password
         )
-        self.dev_ota = await self.dev_device.get_ota_status()
-        self.dev_name = self.dev_device.serial_number
+        if self.dev_device:
+            self.dev_ota = await self.dev_device.get_ota_status()
+            # print(await self.dev_device.get_system_info())
+            self.dev_name = self.dev_device.serial_number
+        else:
+            raise ValueError("Device is not initialized.")
         await self.dev_device.close()
         LOGGER.debug("")
 
@@ -47,22 +54,17 @@ class Sessy_v1:  # pylint: disable=too-many-instance-attributes
         self.dev_device = await get_sessy_device(
             host=self.ip, username=self.username, password=self.password
         )
-        self.dev_measurement = await self.dev_device.get_power_status()
+        if self.dev_device:
+            self.dev_measurement = await self.dev_device.get_power_status()
+        else:
+            raise ValueError("Device is not initialized.")
         await self.dev_device.close()
         LOGGER.debug(self.dev_measurement)
         LOGGER.debug("---")
 
 
 class MySessyBattery:
-    """Class to interact with the Home Wizard devices, regardless of the API version.
-
-    This class is designed to discover HomeWizard devices on the network and
-    establish a connection to the appropriate API version based on the device's
-    capabilities. It handles the discovery of devices, filtering them based on
-    supported services, and finding a specific device by its serial number.
-    The class also provides a method to connect to the device using the
-    appropriate API version (v1 or v2).
-    """
+    """Class to interact with the Sessy batteries."""
 
     def __init__(self, ip: str, user: str, token: str, debug: bool = False) -> None:
         """Initialize the MySessyBattery class.
@@ -74,15 +76,15 @@ class MySessyBattery:
             debug (bool, optional): If True, debugging mode is enabled.
 
         """
-        self.debug = debug
-        self.ip = ip
-        self.username = user
-        self.password = token
-        self.connection = None
+        self.debug: bool = debug
+        self.ip: str = ip
+        self.username: str = user
+        self.password: str = token
+        self.connection: Sessy_v1 | None = None
         self.api_version: str = "unknown"
 
     def connect(self) -> None:
-        """Acquire a connection to the HomeWizard device."""
+        """Acquire a connection to the Sessy battery."""
         self.connection = Sessy_v1(
             ip=self.ip, username=self.username, password=self.password, debug=self.debug
         )
@@ -93,12 +95,8 @@ class MySessyBattery:
         LOGGER.info(f"Connected to device: {self.connection.dev_name}")
         LOGGER.info(f"Device info: {self.connection.dev_ota}")
 
-    def get_measurement(self):
-        """Get the measurement from the HomeWizard device.
-
-        This method retrieves the measurement data from the connected HomeWizard
-        device. It uses the appropriate API version (v1 or v2) to fetch the
-        measurement data and translates it into a dictionary format.
+    def get_measurement(self) -> dict:
+        """Get the measurement from the battery.
 
         Returns:
             dict: A dictionary containing the translated measurement data.
