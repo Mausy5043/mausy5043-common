@@ -64,6 +64,12 @@ skips = []
 [tool.black]
 line-length = 98
 target-version = ["py312", "py313"]
+exclude = '''
+/(
+    legacy/|
+    \.local/
+)
+'''
 
 [tool.isort]
 profile = "black"
@@ -81,6 +87,10 @@ ignore = [
 # line break before binary: is against policy.
     "W503",
     ]
+exclude = [
+    "legacy/",
+    ".local/"
+]
 
 [tool.mypy]
 warn_return_any = true
@@ -94,6 +104,10 @@ disallow_untyped_decorators = true
 disallow_untyped_calls = true
 no_implicit_reexport = true
 extra_checks = true
+exclude = [
+    "legacy/",
+    ".local/"
+]
 
 [tool.pydocstyle]
 inherit = false
