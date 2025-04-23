@@ -32,6 +32,7 @@ class Sessy_v1:  # pylint: disable=too-many-instance-attributes
 
         self.dev_device: SessyDevice | None = None
         self.dev_measurement: dict = {}
+        self.dev_schedule: dict = {}
 
     async def aget_device(self) -> None:
         """Get basic device information, like firmware version."""
@@ -40,7 +41,7 @@ class Sessy_v1:  # pylint: disable=too-many-instance-attributes
         )
         if self.dev_device:
             self.dev_ota = await self.dev_device.get_ota_status()
-            # print(await self.dev_device.get_system_info())
+            print()
             self.dev_name = self.dev_device.serial_number
         else:
             raise ValueError("Device is not initialized.")
@@ -60,6 +61,19 @@ class Sessy_v1:  # pylint: disable=too-many-instance-attributes
             raise ValueError("Device is not initialized.")
         await self.dev_device.close()
         LOGGER.debug(self.dev_measurement)
+        LOGGER.debug("---")
+
+    async def aget_schedule(self) -> None:
+        """Fetch the dynamic schedule."""
+        self.dev_device = await get_sessy_device(
+            host=self.ip, username=self.username, password=self.password
+        )
+        if self.dev_device:
+            self.dev_schedule = await self.dev_device.get_dynamic_schedule()
+        else:
+            raise ValueError("Device is not initialized.")
+        await self.dev_device.close()
+        LOGGER.debug(self.dev_schedule)
         LOGGER.debug("---")
 
 
@@ -107,6 +121,18 @@ class MySessyBattery:
             raise ValueError("No connection to battery established.")
         return self.connection.dev_measurement
 
+    def get_schedule(self) -> dict:
+        """Get the schedule from the battery.
+
+        Returns:
+            dict: A dictionary containing the dynamic schedule data.
+        """
+        if self.connection:
+            asyncio.run(self.connection.aget_schedule())
+        else:
+            raise ValueError("No connection to battery established.")
+        return self.connection.dev_schedule
+
 
 if __name__ == "__main__":
     import json
@@ -125,15 +151,17 @@ if __name__ == "__main__":
     except json.JSONDecodeError:
         LOGGER.error("Error decoding JSON config file.")
         sys.exit(1)
-    try:
-        bat_ip: str = _cfg["bat1"]["ip"]
-        bat_usr: str = _cfg["bat1"]["username"]
-        bat_pwd: str = _cfg["bat1"]["password"]
-    except KeyError as her:
-        LOGGER.error(f"KeyError: {her}")
-        LOGGER.error("Please check the config file.")
-        sys.exit(1)
-    # Test the Sessy class
-    myses = MySessyBattery(ip=bat_ip, user=bat_usr, token=bat_pwd, debug=True)
-    myses.connect()
-    print(json.dumps(myses.get_measurement(), indent=4, sort_keys=True))
+    for battery in ["bat1", "bat2"]:
+        try:
+            bat_ip: str = _cfg[battery]["ip"]
+            bat_usr: str = _cfg[battery]["username"]
+            bat_pwd: str = _cfg[battery]["password"]
+        except KeyError as her:
+            LOGGER.error(f"KeyError: {her}")
+            LOGGER.error("Please check the config file.")
+            sys.exit(1)
+        # Test the Sessy class
+        myses = MySessyBattery(ip=bat_ip, user=bat_usr, token=bat_pwd, debug=True)
+        myses.connect()
+        print(json.dumps(myses.get_measurement(), indent=1, sort_keys=True))
+        # print(json.dumps(myses.get_schedule(), indent=1, sort_keys=True))
