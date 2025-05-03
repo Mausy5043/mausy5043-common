@@ -14,6 +14,7 @@ import logging
 
 import homewizard_energy.models as hwem
 from homewizard_energy import HomeWizardEnergyV1, HomeWizardEnergyV2
+from homewizard_energy.errors import RequestError
 
 try:
     from . import funzeroconf as zcd
@@ -44,18 +45,38 @@ class HomeWizard_V1:  # pylint: disable=too-many-instance-attributes
 
     async def aget_device(self) -> None:
         """Get basic device information, like firmware version."""
+        __call_retries = 5
         async with HomeWizardEnergyV1(host=self.ip) as _api:
-            self.dev_device = await _api.device()
-            LOGGER.debug(self.dev_device)
-            LOGGER.debug("")
+            while __call_retries > 0:
+                try:
+                    self.dev_device = await _api.device()
+                    LOGGER.debug(self.dev_device)
+                    LOGGER.debug("")
+                except RequestError as her:
+                    LOGGER.warning("RequestError, retrying in 12 seconds...")
+                    __call_retries -= 1
+                    await asyncio.sleep(12)
+                    if __call_retries == 0:
+                        LOGGER.error("Failed to get device info after multiple attempts.")
+                        raise her
 
     async def aget_measurement(self) -> None:
         """Fetch a telegram from the P1 dongle."""
+        __call_retries = 5
         async with HomeWizardEnergyV1(host=self.ip) as _api:
             # Get measurements
-            self.dev_measurement = await _api.measurement()
-            LOGGER.debug(self.dev_measurement)
-            LOGGER.debug("---")
+            while __call_retries > 0:
+                try:
+                    self.dev_measurement = await _api.measurement()
+                    LOGGER.debug(self.dev_measurement)
+                    LOGGER.debug("---")
+                except RequestError as her:
+                    LOGGER.warning("RequestError, retrying in 12 seconds...")
+                    __call_retries -= 1
+                    await asyncio.sleep(12)
+                    if __call_retries == 0:
+                        LOGGER.error("Failed to get measurement after multiple attempts.")
+                        raise her
 
 
 # https://api-documentation.homewizard.com/docs/category/api-v2
@@ -72,18 +93,39 @@ class HomeWizard_V2(HomeWizard_V1):
 
     async def aget_device(self) -> None:
         """Get basic device information, like firmware version."""
+        __call_retries = 5
         async with HomeWizardEnergyV2(host=self.ip, token=self.token) as _api:
-            self.dev_device = await _api.device()
-            LOGGER.debug(self.dev_device)
-            LOGGER.debug("")
+            while __call_retries > 0:
+                try:
+                    self.dev_device = await _api.device()
+                    LOGGER.debug(self.dev_device)
+                    LOGGER.debug("-.-")
+                except RequestError as her:
+                    LOGGER.warning("RequestError, retrying in 12 seconds...")
+                    __call_retries -= 1
+                    await asyncio.sleep(12)
+                    if __call_retries == 0:
+                        LOGGER.error("Failed to get device info after multiple attempts.")
+                        raise her
 
     async def aget_measurement(self) -> None:
         """Fetch a telegram from the P1 dongle."""
+        __call_retries = 5
         async with HomeWizardEnergyV2(host=self.ip, token=self.token) as _api:
             # Get measurements
-            self.dev_measurement = await _api.measurement()
-            LOGGER.debug(self.dev_measurement)
-            LOGGER.debug("---")
+            while __call_retries > 0:
+                try:
+                    self.dev_measurement = await _api.measurement()
+                    __call_retries = 0
+                    LOGGER.debug(self.dev_measurement)
+                    LOGGER.debug("---")
+                except RequestError as her:
+                    LOGGER.warning("RequestError, retrying in 12 seconds...")
+                    __call_retries -= 1
+                    await asyncio.sleep(12)
+                    if __call_retries == 0:
+                        LOGGER.error("Failed to get measurement after multiple attempts.")
+                        raise her
 
 
 class MyHomeWizard:
