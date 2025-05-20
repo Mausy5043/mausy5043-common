@@ -236,7 +236,7 @@ def discover_devices(search_time: float = 60.0) -> dict:
     return _ls.discovered
 
 
-def get_ip(service: str, filtr: str = '', timeout: float = 60.0) -> list[str]:
+def get_ip(service: str, filtr: str = "", timeout: float = 60.0) -> list[str]:
     """Discover and retrieve IP addresses for a given service.
 
     Args:

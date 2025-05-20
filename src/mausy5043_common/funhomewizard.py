@@ -6,7 +6,7 @@
 
 # https://api-documentation.homewizard.com/docs/category/api-v1
 
-"""Common functions for use with HomeWizard devices using."""
+"""Common functions for use with HomeWizard devices."""
 
 import asyncio
 import json
@@ -23,9 +23,6 @@ except ImportError:
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
-
-D_FORMAT = "%Y-%m-%d"
-DT_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 SUPPORTED_SERVICES = {"v1": "_hwenergy", "v2": "_homewizard"}
 SUPPORTED_VERSIONS = {_v: _k for _k, _v in SUPPORTED_SERVICES.items()}
@@ -45,8 +42,6 @@ class HomeWizard_V1:  # pylint: disable=too-many-instance-attributes
         self.dev_device: hwem.Device | None = None
         self.dev_measurement: hwem.Measurement | None = None
 
-        self.dt_format: str = DT_FORMAT
-
     async def aget_device(self) -> None:
         """Get basic device information, like firmware version."""
         async with HomeWizardEnergyV1(host=self.ip) as _api:
@@ -61,43 +56,6 @@ class HomeWizard_V1:  # pylint: disable=too-many-instance-attributes
             self.dev_measurement = await _api.measurement()
             LOGGER.debug(self.dev_measurement)
             LOGGER.debug("---")
-
-    # def _translate_telegram(self, telegram) -> dict:
-    #     """Translate the telegram to a dict.
-    #
-    #     kW or kWh are converted to W resp. kW
-    #
-    #     Returns:
-    #         (dict): data converted to a dict.
-    #     """
-    #     self.electra1in = int(telegram.energy_import_t1_kwh * 1000)
-    #     self.electra2in = int(telegram.energy_import_t2_kwh * 1000)
-    #     self.electra1out = int(telegram.energy_export_t1_kwh * 1000)
-    #     self.electra2out = int(telegram.energy_export_t2_kwh * 1000)
-    #     self.tarif = telegram.tariff
-    #     self.powerin = telegram.power_w
-    #     self.powerout = 0.0
-    #     self.swits = 1
-    #     if self.powerin < 0.0:
-    #         self.swits = 0
-    #         self.powerout = self.powerin
-    #         self.powerin = 0.0
-    #
-    #     idx_dt: dt.datetime = dt.datetime.now()
-    #     epoch = int(idx_dt.timestamp())
-    #
-    #     return {
-    #         "sample_time": idx_dt.strftime(self.dt_format),
-    #         "sample_epoch": epoch,
-    #         "T1in": self.electra1in,
-    #         "T2in": self.electra2in,
-    #         "powerin": self.powerin,
-    #         "T1out": self.electra1out,
-    #         "T2out": self.electra2out,
-    #         "powerout": self.powerout,
-    #         "tarif": self.tarif,
-    #         "swits": self.swits,
-    #     }
 
 
 # https://api-documentation.homewizard.com/docs/category/api-v2

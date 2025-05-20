@@ -8,7 +8,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mausy5043-common"
-version = "2.2.7"  # latest production version
+version = "2.4.4"  # latest production version
 # version = "2.1.8" # latest test version
 description = "Common python functions"
 readme = "README.md"
@@ -34,6 +34,7 @@ dependencies = [
     "pandas~=2.2",
     "pyarrow~=19.0",
     "python-homewizard-energy==9.0.0",
+    "sessypy==0.1.14",
     "zeroconf~=0.146",
 ]
 
@@ -63,6 +64,12 @@ skips = []
 [tool.black]
 line-length = 98
 target-version = ["py312", "py313"]
+exclude = '''
+/(
+    legacy/|
+    \.local/
+)
+'''
 
 [tool.isort]
 profile = "black"
@@ -80,6 +87,10 @@ ignore = [
 # line break before binary: is against policy.
     "W503",
     ]
+exclude = [
+    "legacy/",
+    ".local/"
+]
 
 [tool.mypy]
 warn_return_any = true
@@ -93,6 +104,10 @@ disallow_untyped_decorators = true
 disallow_untyped_calls = true
 no_implicit_reexport = true
 extra_checks = true
+exclude = [
+    "legacy/",
+    ".local/"
+]
 
 [tool.pydocstyle]
 inherit = false

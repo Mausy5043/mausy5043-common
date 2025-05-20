@@ -1,6 +1,6 @@
 # When making changes to this file also update requirements.txt and pyproject.toml !!
 # Usage:
-# conda -v env update --file=environment.yml; pre-commit run --all-files; pycheck
+# conda -v env update --file environment.yml; pre-commit run --all-files; pycheck
 
 name: mausy5043-common
 
@@ -19,6 +19,7 @@ dependencies:
   # Not on conda channels:
   - pip:
       - python-homewizard-energy==9.0.0
+      - sessypy==0.1.14
   - pyarrow=19.0
   - zeroconf=0.146
 
