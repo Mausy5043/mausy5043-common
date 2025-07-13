@@ -6,7 +6,10 @@
 
 """Provide file operation functions."""
 
-import os
+import logging
+from pathlib import Path
+
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 def cat(file_name: str) -> str:
@@ -19,7 +22,10 @@ def cat(file_name: str) -> str:
           (str) : file contents
     """
     contents: str = ""
-    if os.path.isfile(file_name):
-        with open(file_name, encoding="utf-8") as file_stream:
-            contents = file_stream.read().strip("\n")
+    try:
+        file_path = Path(file_name)
+        if file_path.is_file():
+            contents = file_path.read_text(encoding="utf-8")
+    except Exception as her:
+        LOGGER.error(f"Accessing {file_name} returned: {her}")
     return contents
