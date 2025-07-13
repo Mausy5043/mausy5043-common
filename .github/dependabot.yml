@@ -6,7 +6,9 @@ updates:
     directory: '/'
     target-branch: 'devel'
     schedule:
-      interval: 'weekly'
+        interval: 'weekly'
+    versioning-strategy: increase
+    auto-merge: true
     allow:
       # Allow both direct and indirect updates for all packages
       - dependency-type: 'all'
