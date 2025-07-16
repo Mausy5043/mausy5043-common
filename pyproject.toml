@@ -34,7 +34,7 @@ dependencies = [
     "pandas~=2.2",
     "pyarrow>=19,<21",
     "python-homewizard-energy==9.2.0",
-    "sessypy==0.1.14",
+    "sessypy==0.2.2",
     "zeroconf~=0.146",
 ]
 
