@@ -30,9 +30,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "numpy~=2.2",
-    "pandas~=2.2",
-    "pyarrow>=19,<22",
+    "numpy==2.2",
+    "pandas==2.2",
+    "pyarrow==21.0",
     "python-homewizard-energy==9.3.0",
     "sessypy==0.2.2",
     "zeroconf~=0.146",
