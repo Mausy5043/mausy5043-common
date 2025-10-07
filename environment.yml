@@ -9,19 +9,18 @@ channels:
   - defaults
 
 dependencies:
-  # 3.12 needed for homewizard
-  - python=3.12
+  - python=3.13
   - pip
   # imported deps
-  - numpy=2.2
-  - pandas=2.2
+  - numpy
+  - pandas
 
   # Not on conda channels:
   - pip:
-      - python-homewizard-energy==9.0.0
-      - sessypy==0.1.14
-  - pyarrow=19.0
-  - zeroconf=0.146
+      - python-homewizard-energy==9.3.0
+      - sessypy==0.2.2
+  - pyarrow
+  - zeroconf=0.147
 
   # dev deps
   - pandas-stubs

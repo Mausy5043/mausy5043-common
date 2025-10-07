@@ -41,7 +41,6 @@ class Sessy_v1:  # pylint: disable=too-many-instance-attributes
         )
         if self.dev_device:
             self.dev_ota = await self.dev_device.get_ota_status()
-            print()
             self.dev_name = self.dev_device.serial_number
         else:
             raise ValueError("Device is not initialized.")
