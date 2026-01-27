@@ -31,7 +31,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "pandas==2.3.3",
+    "pandas==3.0.0",
     "pyarrow",
     "python-homewizard-energy==10.0.1",
     "sessypy==0.2.5",
