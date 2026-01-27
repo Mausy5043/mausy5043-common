@@ -100,16 +100,6 @@ class MyHomeWizard:
     def __init__(self, serial: str, token: str = "", debug: bool = False) -> None:  # nosec B107
         """Find a device with the given serial number.
 
-        Attributes:
-            debug (bool): A flag that determines if debugging mode is active.
-            discovered_devices (list): A list of all devices discovered during
-                the zeroconf discovery process.
-            supported_devices (list): A filtered list of devices limited to
-                HomeWizard services.
-            serial (str): The unique serial number of the target device.
-            target_device: The device corresponding to the provided serial
-                number.
-
         Args:
             serial (str): The serial number of the device to be identified among
                 the supported devices.
