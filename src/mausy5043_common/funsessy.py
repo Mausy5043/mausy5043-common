@@ -55,7 +55,7 @@ class Sessy_v1:  # pylint: disable=too-many-instance-attributes
             host=self.ip, username=self.username, password=self.password
         )
         if self.dev_device:
-            # type: ignore[reportAttributeAccessIssue]
+            # ignore reportAttributeAccessIssue
             self.dev_measurement = await self.dev_device.get_power_status()  # type: ignore
         else:
             raise ValueError("Device is not initialized.")
@@ -69,7 +69,7 @@ class Sessy_v1:  # pylint: disable=too-many-instance-attributes
             host=self.ip, username=self.username, password=self.password
         )
         if self.dev_device:
-            # type: ignore[reportAttributeAccessIssue]
+            # ignore reportAttributeAccessIssue
             self.dev_schedule = await self.dev_device.get_dynamic_schedule()  # type: ignore
         else:
             raise ValueError("Device is not initialized.")
