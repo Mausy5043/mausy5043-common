@@ -128,25 +128,26 @@ def relative_humidity_t2(T1: ArrayLike, RH1: ArrayLike, T2: ArrayLike) -> ArrayL
     return RH2.item() if scalar_input else RH2
 
 
-# Example usage with scalars
-T1: float = 17.0  # °C
-RH1: float = 73.0  # %
-T2: float = 21.0  # °C
+if __name__ == "__main__":
+    # Example usage with scalars
+    T1: float = 17.0  # °C
+    RH1: float = 73.0  # %
+    T2: float = 21.0  # °C
 
-RH2 = float(relative_humidity_t2(T1, RH1, T2))
-Td = dew_point_temperature(T1, RH1)
-Tm = moisture(T1, RH1, 1013)
-Tw = wet_bulb_temperature(T1, RH1)
+    RH2 = float(relative_humidity_t2(T1, RH1, T2))
+    Td = dew_point_temperature(T1, RH1)
+    Tm = moisture(T1, RH1, 1013)
+    Tw = wet_bulb_temperature(T1, RH1)
 
-print(f"(Scalar) Dew point: {Td:.2f} °C")
-print(f"(Scalar) Wetbulb T: {Tw:.2f} °C")
-print(f"(Scalar) Moisture : {Tm[0]:.2f} kg/m3")
-print(f"(Scalar) New relative humidity at {T2} °C: {RH2:.2f}%")
-print(f"(Scalar) New dew point: {dew_point_temperature(T2, RH2):.2f} °C")
-print(f"(Scalar) New wetbulb T: {wet_bulb_temperature(T2, RH2):.2f} °C")
+    print(f"(Scalar) Dew point: {Td:.2f} °C")
+    print(f"(Scalar) Wetbulb T: {Tw:.2f} °C")
+    print(f"(Scalar) Moisture : {Tm[0]:.2f} kg/m3")
+    print(f"(Scalar) New relative humidity at {T2} °C: {RH2:.2f} %")
+    print(f"(Scalar) New dew point: {dew_point_temperature(T2, RH2):.2f} °C")
+    print(f"(Scalar) New wetbulb T: {wet_bulb_temperature(T2, RH2):.2f} °C")
 
-# Example usage with arrays
-T2_array = np.array([15.0, 20.0, 25.0, 30.0])
-RH2_array = relative_humidity_t2(T1, RH1, T2_array)
+    # Example usage with arrays
+    T2_array = np.array([15.0, 20.0, 25.0, 30.0])
+    RH2_array = relative_humidity_t2(T1, RH1, T2_array)
 
-print(f"(Array) New relative humidities at {T2_array} °C: {RH2_array}")
+    print(f"(Array) New relative humidities at {T2_array} °C: {RH2_array}")
