@@ -121,7 +121,7 @@ def _call_go(func: str, **kwargs) -> np.ndarray:
         "func": func,
         "args": dict(zip(keys, [a.tolist() for a in arrays], strict=True)),
     }
-
+    # print(json.dumps(payload))
     result = subprocess.run(
         [str(binary)],
         input=json.dumps(payload),
@@ -129,7 +129,7 @@ def _call_go(func: str, **kwargs) -> np.ndarray:
         text=True,
         shell=True,  # Use shell=True for Windows compatibility; ensure binary path is safe
     )
-
+    # print(json.dumps(result.__dict__, indent=2))
     if result.returncode != 0:
         raise RuntimeError(result.stderr)
 
@@ -145,7 +145,9 @@ def _call_go(func: str, **kwargs) -> np.ndarray:
 # --- Public API (mirror funmeteo.py) -----------------------------------------
 
 
-def moisture(temperature: Number, relative_humidity: Number, pressure: Number) -> np.ndarray:
+def moisture(
+    temperature: ArrayLike, relative_humidity: ArrayLike, pressure: ArrayLike
+) -> np.ndarray:
     """Calculate moisture content of air given T, RH and P.
 
     Args:
@@ -156,31 +158,62 @@ def moisture(temperature: Number, relative_humidity: Number, pressure: Number) -
     Returns:
         np.array: moisture content in kg/m3
     """
+    print(temperature, relative_humidity, pressure)
     return _call_go(
         "moisture", temperature=temperature, humidity=relative_humidity, pressure=pressure
     )
 
 
+def saturation_vapor_pressure(temperature: ArrayLike) -> np.ndarray:
+    """Calculate saturation vapor pressure over liquid water using the Magnus formula.
+
+    Args:
+        temperature: in °C (scalar or array)
+
+    Returns:
+        Saturation vapor pressure in Pa (scalar or numpy array)
+    """
+    return _call_go("saturation_vapour_pressure", temperature=temperature)
+
+
+def relative_humidity_t2(T1: ArrayLike, RH1: ArrayLike, T2: ArrayLike) -> ArrayLike:
+    """Calculate new relative humidity after a temperature change.
+
+    If T2 < dew point, RH2 = 100% (saturation).
+
+    Args:
+        T1: initial temperature in °C (scalar or array)
+        RH1: initial relative humidity in % (scalar or array)
+        T2: new temperature in °C (scalar or array)
+
+    Returns:
+        New relative humidity in % (scalar or numpy array)
+    """
+    return _call_go("relative_humidity_t2", temperature1=T1, humidity_t1=RH1, temperature2=T2)
+
+
 if __name__ == "__main__":
     # Example usage with scalars
-    T1: float = 17.0  # °C
-    RH1: float = 73.0  # %
+    T1: list = [20.0, 23.4, 100]  # °C
+    RH1: float = 52.0  # %
     T2: float = 21.0  # °C
 
-    # RH2 = float(relative_humidity_t2(T1, RH1, T2))
-    # Td = dew_point_temperature(T1, RH1)
     Tm = moisture(T1, RH1, 1013)
+    print(f"Moistures : {Tm} kg/m3")
+    print(saturation_vapor_pressure(T1))
+
+    # RH2 = relative_humidity_t2(T1, RH1, T2)
+    # Td = dew_point_temperature(T1, RH1)
     # Tw = wet_bulb_temperature(T1, RH1)
 
     # print(f"(Scalar) Dew point: {Td:.2f} °C")
     # print(f"(Scalar) Wetbulb T: {Tw:.2f} °C")
-    print(f"(Scalar) Moisture : {Tm[0]:.2f} kg/m3")
     # print(f"(Scalar) New relative humidity at {T2} °C: {RH2:.2f} %")
     # print(f"(Scalar) New dew point: {dew_point_temperature(T2, RH2):.2f} °C")
     # print(f"(Scalar) New wetbulb T: {wet_bulb_temperature(T2, RH2):.2f} °C")
 
     # Example usage with arrays
-    # T2_array = np.array([15.0, 20.0, 25.0, 30.0])
+    T2_array = np.array([15.0, 20.0, 25.0, 30.0])
     # RH2_array = relative_humidity_t2(T1, RH1, T2_array)
 
     # print(f"(Array) New relative humidities at {T2_array} °C: {RH2_array}")
