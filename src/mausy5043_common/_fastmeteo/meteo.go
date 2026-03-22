@@ -162,6 +162,17 @@ func main() {
 		}
 		respondOK(result)
 
+	// case "relative_humidity_t2":
+	// 	temperature1 := req.Args["temperature1"]
+	// 	humidity1 := req.Args["humidity_t1"]
+	// 	temperature2 := req.Args["temperature2"]
+	// 	// println("Received moisture request with temperature:", temperature, "humidity:", humidity, "pressure:", pressure)
+	// 	result, err := relative_humidity_t2(temperature1, humidity1, temperature2)
+	// 	if err != nil {
+	// 		respondError(err)
+	// 		return
+	// 	}
+
 	default:
 		respondError(fmt.Errorf("unknown function: %s", req.Func))
 	}
