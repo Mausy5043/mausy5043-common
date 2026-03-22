@@ -127,6 +127,7 @@ def _call_go(func: str, **kwargs) -> np.ndarray:
         input=json.dumps(payload),
         capture_output=True,
         text=True,
+        shell=True,  # Use shell=True for Windows compatibility; ensure binary path is safe
     )
 
     if result.returncode != 0:
