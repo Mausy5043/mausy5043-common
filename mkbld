@@ -20,9 +20,10 @@ build_app(){
     python3 -m pip install --upgrade twine | grep -v "already satisfied"
     ### build package
     echo
-    echo "Building..."
-    rm -r dist/*
-    rm -r ./*.egg-info
+    make_go
+    echo "Building app..."
+    rm -r dist/* 2>/dev/null || true
+    rm -r ./*.egg-info 2>/dev/null || true
     python3 -m build --outdir ./dist # not needed by default: --sdist --wheel
 }
 
@@ -50,6 +51,23 @@ update_local_repo() {
     git reset --hard "origin/${branch_name}" || exit 1
     git clean -f -d || exit 1
     git pull || exit 1
+}
+
+make_go() {
+    echo "Building Go binaries..."
+    pushd src/mausy5043_common/_fastmeteo >/dev/null || exit 1
+        # go mod init fastmeteo
+        rm bin/* 2>/dev/null || true
+        go mod tidy
+        # mkdir -p bin
+        # go build -o bin/meteo
+        GOOS=linux GOARCH=arm64 go build -o bin/meteo-linux-arm64
+        GOOS=linux GOARCH=amd64 go build -o bin/meteo-linux-amd64
+        GOOS=darwin GOARCH=arm64 go build -o bin/meteo-darwin-arm64
+        GOOS=darwin GOARCH=amd64 go build -o bin/meteo-darwin-amd64
+        GOOS=windows GOARCH=arm64 go build -o bin/meteo-windows-arm64.exe
+        GOOS=windows GOARCH=amd64 go build -o bin/meteo-windows-amd64.exe
+    popd >/dev/null || exit 1
 }
 
 # check commandline parameters

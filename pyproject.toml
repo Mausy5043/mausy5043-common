@@ -8,8 +8,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mausy5043-common"
-version = "2.10.1"  # latest production version
-# version = "2.9.1" # latest test version
+#version = "2.10.1"  # latest production version
+version = "2.11.1" # latest test version
 description = "Common python functions"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -40,6 +40,8 @@ dependencies = [
 
 [tool.hatch.build.targets.wheel.force-include]
 "./pyproject.toml" = "mausy5043_common/pyproject.toml"
+# "./src/mausy5043_common/_fastmeteo/__init__.py" = "mausy5043_common/_fastmeteo/__init__.py"
+# "./src/mausy5043_common/_fastmeteo/bin" = "mausy5043_common/_fastmeteo/bin"
 
 [project.urls]
 "Homepage" = "https://github.com/Mausy5043/mausy5043-common"
