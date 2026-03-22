@@ -11,8 +11,8 @@ import (
 // --- Request/Response structs -----------------------------------------------
 
 type Request struct {
-	Func string                 `json:"func"`
-	Args map[string][]float64   `json:"args"`
+	Func string               `json:"func"`
+	Args map[string][]float64 `json:"args"`
 }
 
 type Response struct {
@@ -68,21 +68,29 @@ func main() {
 
 	switch req.Func {
 
-        case "moisture":
-            temperature := req.Args["temperature"]
-            humidity := req.Args["humidity"]
-            pressure := req.Args["pressure"]
+	case "moisture":
+		temperature := req.Args["temperature"]
+		humidity := req.Args["humidity"]
+		pressure := req.Args["pressure"]
+		// println("Received moisture request with temperature:", temperature, "humidity:", humidity, "pressure:", pressure)
+		result, err := moisture(temperature, humidity, pressure)
+		if err != nil {
+			respondError(err)
+			return
+		}
+		respondOK(result)
 
-            result, err := moisture(temperature, humidity, pressure)
-            if err != nil {
-                respondError(err)
-                return
-            }
+	case "saturation_vapour_pressure":
+		temperature := req.Args["temperature"]
+		result, err := saturation_vapor_pressure(temperature)
+		if err != nil {
+			respondError(err)
+			return
+		}
+		respondOK(result)
 
-            respondOK(result)
-
-        default:
-            respondError(fmt.Errorf("unknown function: %s", req.Func))
+	default:
+		respondError(fmt.Errorf("unknown function: %s", req.Func))
 	}
 }
 
