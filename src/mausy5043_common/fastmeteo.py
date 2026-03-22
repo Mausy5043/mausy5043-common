@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 
 Number = float | int
-ArrayLike = Number | np.ndarray
+ArrayLike = Number | list | np.ndarray
 
 
 # --- Binary resolution -------------------------------------------------------
