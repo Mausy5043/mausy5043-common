@@ -8,7 +8,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mausy5043-common"
-version = "2.10.1"  # latest production version
+version = "2.10.5"  # latest production version
 # version = "2.9.1" # latest test version
 description = "Common python functions"
 readme = "README.md"
@@ -31,11 +31,11 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "pandas==2.3.3",
+    "pandas",   # ==2.3.3",
     "pyarrow",
     "python-homewizard-energy==10.0.1",
     "sessypy==0.2.6",
-    "zeroconf~=0.147",
+    "zeroconf~=0.148",
 ]
 
 [tool.hatch.build.targets.wheel.force-include]
