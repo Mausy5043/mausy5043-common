@@ -13,14 +13,15 @@ dependencies:
   - pip
   # imported deps
   - numpy
-  - pandas=2.3.3
+  - pandas
+    # =2.3.3
 
   # Not on conda channels:
   - pip:
       - python-homewizard-energy==10.0.1
       - sessypy==0.2.6
   - pyarrow
-  - zeroconf=0.147
+  - zeroconf=0.148
 
   # dev deps
   - pandas-stubs
