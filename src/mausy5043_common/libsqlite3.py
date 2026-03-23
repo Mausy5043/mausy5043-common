@@ -13,6 +13,7 @@ import sqlite3 as s3
 import time
 
 import pandas as pd
+import pandas.errors
 
 DT_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -132,8 +133,8 @@ class SqlDatabase:  # pylint: disable=R0902
             try:
                 df.to_sql(name=self.table, con=consql, if_exists="append", index=False)
                 LOGGER.debug(f"Inserted : \n{df}\n")
-            except s3.IntegrityError:
-                # probably "sqlite3.IntegrityError: UNIQUE constraint failed".
+            except (s3.IntegrityError, pandas.errors.DatabaseError) as her:
+                # probably "sqlite3.DatabaseError: UNIQUE constraint failed".
                 # this can be passed
                 if method == "ignore":
                     LOGGER.debug("Duplicate entry. Not adding to database.")
@@ -148,7 +149,12 @@ class SqlDatabase:  # pylint: disable=R0902
                         cursor.fetchone()
                         cursor.close()
                         consql.commit()
-                    except s3.IntegrityError:
+                    except pandas.errors.DatabaseError as her:
+                        # probably "sqlite3.DatabaseError: UNIQUE constraint failed".
+                        # this can be passed
+                        LOGGER.debug("Ignoring: pandas DatabaseError.")
+                        pass
+                    except s3.IntegrityError as her:
                         # probably "sqlite3.IntegrityError: UNIQUE constraint failed".
                         # this can be passed
                         LOGGER.debug("Ignoring: IntegrityError.")
