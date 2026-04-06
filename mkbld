@@ -88,6 +88,10 @@ case $CMD in
         # reset local repo discarding local changes
         update_local_repo "${BRANCH}" || exit 1
         ;;
+    -g | --go)
+        # build golang binaries
+        make_go
+        ;;
     *)
         echo "Syntax:"
         echo "mkbld [-b|--build] | [-d|--dist] | [-t|--test] | [--discard]"
