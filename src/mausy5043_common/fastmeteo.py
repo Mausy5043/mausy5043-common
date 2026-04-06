@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 
 Number = float | int
-ArrayLike = Number | list | np.ndarray
+ArrayLike = Number | list[Number] | np.ndarray
 
 
 # --- Binary resolution -------------------------------------------------------
@@ -85,7 +85,7 @@ def _normalize_inputs(*args: ArrayLike) -> tuple[list[np.ndarray], tuple[int, ..
     return [a.ravel() for a in broadcasted], broadcasted[0].shape
 
 
-def _call_go(func: str, **kwargs) -> np.ndarray:
+def _call_go(func: str, **kwargs) -> ArrayLike:
     """Call the Go backend to execute a meteorological function.
 
     This function:
@@ -139,15 +139,13 @@ def _call_go(func: str, **kwargs) -> np.ndarray:
         raise RuntimeError(response["error"])
 
     out = np.array(response["result"], dtype=float)
-    return out  # .reshape(shape)
+    return out.reshape(shape)
 
 
 # --- Public API (mirror funmeteo.py) -----------------------------------------
 
 
-def moisture(
-    temperature: ArrayLike, relative_humidity: ArrayLike, pressure: ArrayLike
-) -> np.ndarray:
+def moisture(temperature: Number, relative_humidity: Number, pressure: Number) -> ArrayLike:
     """Calculate moisture content of air given T, RH and P.
 
     Args:
@@ -158,13 +156,25 @@ def moisture(
     Returns:
         np.array: moisture content in kg/m3
     """
-    print(temperature, relative_humidity, pressure)
     return _call_go(
         "moisture", temperature=temperature, humidity=relative_humidity, pressure=pressure
     )
 
 
-def saturation_vapor_pressure(temperature: ArrayLike) -> np.ndarray:
+def wet_bulb_temperature(temperature: float, relative_humidity: float) -> ArrayLike:
+    """Calculate the wet bulb temperature of the air given T and RH.
+
+    Args:
+        temperature: in degC
+        relative_humidity: in %
+
+    Returns:
+        Wet bulb temperature in degC
+    """
+    return _call_go("wet_bulb_temperature", temperature=temperature, humidity=relative_humidity)
+
+
+def saturation_vapor_pressure(temperature: ArrayLike) -> ArrayLike:
     """Calculate saturation vapor pressure over liquid water using the Magnus formula.
 
     Args:
@@ -174,6 +184,19 @@ def saturation_vapor_pressure(temperature: ArrayLike) -> np.ndarray:
         Saturation vapor pressure in Pa (scalar or numpy array)
     """
     return _call_go("saturation_vapour_pressure", temperature=temperature)
+
+
+def dew_point_temperature(temperature: ArrayLike, relative_humidity: ArrayLike) -> ArrayLike:
+    """Calculate the dew point temperature of the air given T and RH.
+
+    Args:
+        temperature: in degC
+        relative_humidity: in %
+
+    Returns:
+        Dew point temperature in degC
+    """
+    return _call_go("dew_point_temperature", temperature=temperature, humidity=relative_humidity)
 
 
 def relative_humidity_t2(T1: ArrayLike, RH1: ArrayLike, T2: ArrayLike) -> ArrayLike:
@@ -194,17 +217,21 @@ def relative_humidity_t2(T1: ArrayLike, RH1: ArrayLike, T2: ArrayLike) -> ArrayL
 
 if __name__ == "__main__":
     # Example usage with scalars
-    T1: list = [20.0, 23.4, 100]  # °C
-    RH1: float = 52.0  # %
-    T2: float = 21.0  # °C
+    T1: float = 23.0  # °C
+    RH1: float = 73.0  # %
+    P: float = 1013.0  # hPa
 
-    Tm = moisture(T1, RH1, 1013)
-    print(f"Moistures : {Tm} kg/m3")
-    print(saturation_vapor_pressure(T1))
+    Tm: float = moisture(T1, RH1, 1013)
+    print(f"(Scalar) Moisture content:          {Tm:7.2f} kg/m3")
+    Tw: float = wet_bulb_temperature(T1, RH1)
+    print(f"(Scalar) Wet bulb temperature:      {Tw:7.2f} °C")
+    Td: float = dew_point_temperature(T1, RH1)
+    print(f"(Scalar) Dew point temperature:     {Td:7.2f} °C")
+    Ps: float = saturation_vapor_pressure(T1)
+    print(f"(Scalar) Saturation vapor pressure: {Ps:7.2f} hPa")
 
     # RH2 = relative_humidity_t2(T1, RH1, T2)
     # Td = dew_point_temperature(T1, RH1)
-    # Tw = wet_bulb_temperature(T1, RH1)
 
     # print(f"(Scalar) Dew point: {Td:.2f} °C")
     # print(f"(Scalar) Wetbulb T: {Tw:.2f} °C")
