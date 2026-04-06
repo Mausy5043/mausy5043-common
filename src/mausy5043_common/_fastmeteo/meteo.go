@@ -22,7 +22,7 @@ type Response struct {
 
 // --- Core calculation --------------------------------------------------------
 
-func moisture(temperature, humidity, pressure []float64) ([]float64, error) {
+func Moisture(temperature, humidity, pressure []float64) ([]float64, error) {
 	n := len(temperature)
 
 	if len(humidity) != n || len(pressure) != n {
@@ -37,7 +37,7 @@ func moisture(temperature, humidity, pressure []float64) ([]float64, error) {
 
 		rho := (287.04 * kelvin) / pascal
 
-		es := a_saturation_vapor_pressure(temperature[i])
+		es := a_Saturation_Vapor_Pressure(temperature[i])
 		rvs := 0.622 * es / (pascal - es)
 		rv := (humidity[i] / 100.0) * rvs
 		qv := rv / (1.0 + rv)
@@ -50,7 +50,7 @@ func moisture(temperature, humidity, pressure []float64) ([]float64, error) {
 	return out, nil
 }
 
-func a_saturation_vapor_pressure(temperature float64) float64 {
+func a_Saturation_Vapor_Pressure(temperature float64) float64 {
 	// Use the Magnus formula for saturation vapor pressure over liquid water
 	// to calculate the saturation vapor pressure at a given temperature.
 	// T in °C
@@ -60,33 +60,71 @@ func a_saturation_vapor_pressure(temperature float64) float64 {
 	return es
 }
 
-func saturation_vapor_pressure(temperature []float64) ([]float64, error) {
+func Saturation_Vapor_Pressure(temperature []float64) ([]float64, error) {
+    // returns saturation vapor pressure in hPa
 	n := len(temperature)
 
 	out := make([]float64, n)
 
 	for i := range n {
-		es := a_saturation_vapor_pressure(temperature[i])
-		out[i] = es // Pa
+		es := a_Saturation_Vapor_Pressure(temperature[i])
+		out[i] = es / 100.0 // hPa
 	}
 	return out, nil
 }
 
-func wetBulbTemperature(temperature, relativeHumidity float64) float64 {
+func Wet_Bulb_Temperature(temperature, humidity []float64) ([]float64, error) {
 	// Calculate the wet bulb temperature of the air given T and RH.
 	// temperature: in degC
-	// relativeHumidity: in %
+	// humidity: in %
 	// Returns: Wet bulb temperature in degC
-	wbt := (temperature*math.Atan(0.151977*math.Sqrt(relativeHumidity+8.313659)) +
-		math.Atan(temperature+relativeHumidity) -
-		math.Atan(relativeHumidity-1.676331) +
-		0.00391838*math.Pow(relativeHumidity, 1.5)*math.Atan(0.023101*relativeHumidity) -
-		4.686035)
-	return wbt
+	n := len(temperature)
+
+	if len(humidity) != n || len(temperature) != n {
+		return nil, fmt.Errorf("input arrays must have equal length")
+	}
+
+	out := make([]float64, n)
+
+	for i := range n {
+	    T := temperature[i]
+		RH := humidity[i]
+		wbt := (T*
+			math.Atan(0.151977 * math.Sqrt(RH + 8.313659)) +
+			math.Atan(T + RH) -
+			math.Atan(RH - 1.676331) +
+			0.00391838*math.Pow(RH, 1.5)*math.Atan(0.023101 * RH) -
+			4.686035)
+		out[i] = wbt
+	}
+	return out, nil
 }
 
-/*
-func relative_humidity_t2(temperature1, humidity1, temperature2 []float64) ([]float64, error) {
+func Dew_Point_Temperature(temperature, humidity []float64) ([]float64, error) {
+    // Compute dew point temperature (°C) from air temperature and relative humidity.
+    //     temperature: temperature in °C
+    //     relative_humidity: relative humidity in % (0–100)
+    // Returns:
+    //     Dew point temperature in °C
+   	n := len(temperature)
+
+	if len(humidity) != n {
+		return nil, fmt.Errorf("input arrays must have equal length")
+	}
+
+	out := make([]float64, n)
+
+	for i := range n {
+	    svp:= a_Saturation_Vapor_Pressure(temperature[i]) / 100
+		vp:= svp * (humidity[i] / 100.0)
+		ln_ratio := math.Log(vp / 6.112)
+		dpt := (243.5 * ln_ratio) / (17.67 - ln_ratio)
+		out[i] = dpt
+	}
+	return out, nil
+}
+
+func Relative_Humidity_T2(temperature1, humidity1, temperature2 []float64) ([]float64, error) {
 	n := len(temperature1)
 
 	if len(humidity1) != n || len(temperature2) != n {
@@ -101,14 +139,14 @@ func relative_humidity_t2(temperature1, humidity1, temperature2 []float64) ([]fl
         T2 := temperature2[i]
 
         // Actual vapor pressure at T1
-        es1 := saturation_vapor_pressure(T1)
+        es1 := a_Saturation_Vapor_Pressure(T1)
         e_actual := (RH1 / 100.0) * es1
 
         // Dew point check
-        Td := dew_point_temperature(T1, RH1)
+        // Td := dew_point_temperature(T1, RH1)
 
         // Saturation vapor pressure at T2
-        es2 := saturation_vapor_pressure(T2)
+        es2 := a_Saturation_Vapor_Pressure(T2)
 
         // Compute RH2
         RH2 := (e_actual / es2) * 100.0
@@ -121,7 +159,7 @@ func relative_humidity_t2(temperature1, humidity1, temperature2 []float64) ([]fl
 
 	return out, nil
 }
-*/
+
 
 // --- Main dispatcher ---------------------------------------------------------
 
@@ -146,7 +184,7 @@ func main() {
 		humidity := req.Args["humidity"]
 		pressure := req.Args["pressure"]
 		// println("Received moisture request with temperature:", temperature, "humidity:", humidity, "pressure:", pressure)
-		result, err := moisture(temperature, humidity, pressure)
+		result, err := Moisture(temperature, humidity, pressure)
 		if err != nil {
 			respondError(err)
 			return
@@ -155,12 +193,32 @@ func main() {
 
 	case "saturation_vapour_pressure":
 		temperature := req.Args["temperature"]
-		result, err := saturation_vapor_pressure(temperature)
+		result, err := Saturation_Vapor_Pressure(temperature)
 		if err != nil {
 			respondError(err)
 			return
 		}
 		respondOK(result)
+
+	case "wet_bulb_temperature":
+    	temperature := req.Args["temperature"]
+    	humidity := req.Args["humidity"]
+		result, err := Wet_Bulb_Temperature(temperature, humidity)
+		if err != nil {
+			respondError(err)
+			return
+		}
+		respondOK(result)
+
+	case "dew_point_temperature":
+    	temperature := req.Args["temperature"]
+    	humidity := req.Args["humidity"]
+				result, err := Dew_Point_Temperature(temperature, humidity)
+				if err != nil {
+					respondError(err)
+					return
+				}
+				respondOK(result)
 
 	// case "relative_humidity_t2":
 	// 	temperature1 := req.Args["temperature1"]
