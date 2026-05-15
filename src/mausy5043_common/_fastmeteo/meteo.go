@@ -248,3 +248,24 @@ func respondError(err error) {
 	enc := json.NewEncoder(os.Stdout)
 	_ = enc.Encode(resp)
 }
+
+/* Well that's disappointing:
+ ---------------------------------------------------------------------------
+ maurice@krypton:/Users/maurice/coding/git/hub/mausy5043-common -->  time src/mausy5043_common/fastmeteo.py                                                               git  mausy5043-common go |
+ (Scalar) Moisture content:            10.73 kg/m3
+ (Scalar) Wet bulb temperature:        19.48 °C
+ (Scalar) Dew point temperature:       17.90 °C
+ (Scalar) Saturation vapor pressure:   28.09 hPa
+ src/mausy5043_common/fastmeteo.py  0.09s user 0.06s system 13% cpu 1.143 total
+ (mausy5043-common)
+ ---------------------------------------------------------------------------
+ maurice@krypton:/Users/maurice/coding/git/hub/mausy5043-common -->  time src/mausy5043_common/funmeteo.py                                                                git  mausy5043-common go |
+ (Scalar) Moisture content:            10.73 kg/m3
+ (Scalar) Wet bulb temperature:        19.48 °C
+ (Scalar) Dew point temperature:       17.90 °C
+ (Scalar) Saturation vapor pressure:   28.09 hPa
+ (Scalar) New relative humidity:       99.71 %   (@ 17.95 °C)
+ src/mausy5043_common/funmeteo.py  0.07s user 0.03s system 23% cpu 0.398 total
+ (mausy5043-common)
+ ---------------------------------------------------------------------------
+ */
