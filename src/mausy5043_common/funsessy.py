@@ -9,7 +9,7 @@
 import asyncio
 import logging
 
-from sessypy.devices import (  # type: ignore[import-untyped]
+from sessypy.devices import (  # type: ignore[import-untyped, import-not-found]
     SessyDevice,
     get_sessy_device,
 )
