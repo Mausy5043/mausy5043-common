@@ -9,21 +9,21 @@ channels:
   - defaults
 
 dependencies:
-  - python=3.13
-  - pip
-  # imported deps
-  - numpy
-  - pandas
-    # =2.3.3
+    - python =3.13
+    - pip
+    # imported deps
+    - numpy
+    - pandas
 
   # Not on conda channels:
-  - pip:
-      - python-homewizard-energy==10.0.1
-      - sessypy==0.2.6
-  - pyarrow
-  - zeroconf=0.148
+    - pip:
+        - python-homewizard-energy==10.1.0
+        - sessypy==0.2.6
+        - zeroconf~=0.149
+    - pyarrow
 
-  # dev deps
-  - pandas-stubs
-  - pipdeptree
-  - pre-commit
+
+    # dev deps
+    - pandas-stubs
+    - pipdeptree
+    - pre-commit
