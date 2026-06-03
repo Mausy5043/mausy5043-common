@@ -31,7 +31,7 @@ dependencies = [
     "numpy",
     "pandas",   # ==2.3.3",
     "pyarrow",
-    "python-homewizard-energy==10.1.0",
+    "python-homewizard-energy==10.2.0",
     "sessypy==0.2.6",
     "zeroconf~=0.149",
 ]
