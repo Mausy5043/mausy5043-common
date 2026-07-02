@@ -33,7 +33,7 @@ dependencies = [
     "pyarrow",
     "python-homewizard-energy==10.2.0",
     "sessypy==0.2.6",
-    "zeroconf~=0.149",
+    "zeroconf==0.150.0",
 ]
 
 [tool.hatch.build.targets.wheel.force-include]
