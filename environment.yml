@@ -17,7 +17,7 @@ dependencies:
 
   # Not on conda channels:
     - pip:
-        - python-homewizard-energy==10.1.0
+        - python-homewizard-energy==10.2.0
         - sessypy==0.2.6
         - zeroconf~=0.149
     - pyarrow
