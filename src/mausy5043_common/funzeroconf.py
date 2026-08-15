@@ -14,7 +14,12 @@ import sys
 import time
 from typing import Any
 
-from zeroconf import ServiceBrowser, ServiceListener, Zeroconf, ZeroconfServiceTypes
+from zeroconf import (
+    ServiceBrowser,
+    ServiceListener,
+    Zeroconf,
+    ZeroconfServiceTypes,
+)
 
 # initialize logging
 __is_macos: bool = platform.system() == "Darwin"
@@ -44,7 +49,7 @@ MYROOT: str = "/".join(HERE[0:-4])
 APPROOT: str = "/".join(HERE[0:-3])
 NODE: str = os.uname()[1]
 
-LOCAL_DIR: str = f"{os.getenv('HOME')}/.local"
+LOCAL_DIR: str = f"{os.path.expanduser("~")}/.local"
 DEVICE_FILE: str = f"{LOCAL_DIR}/devices.json"
 # fmt: on
 
@@ -109,15 +114,19 @@ class ZcsListener(ServiceListener):
         __type = type_.split(".")[0]
         LOGGER.debug(f"( * ) Service {__name} updated. ( {__type} )")
         # find out updated info about this device
-        info = zc.get_service_info(type_, name)
         svc: str = ""
         prop: dict = {}
+        try:
+            info = zc.get_service_info(type_, name)
+        except Exception:
+            LOGGER.error(f"Exception getting service info for: {name}")
+            return
         if info:
             try:
                 prop = self.debyte(info.properties)
                 if info.addresses:
                     svc = ".".join(list(map(str, list(info.addresses[0]))))
-            except BaseException:
+            except Exception:
                 LOGGER.error(
                     f"Exception for device info: {info}\n {info.properties}\n {info.addresses}\n"
                 )
@@ -136,15 +145,19 @@ class ZcsListener(ServiceListener):
         __name = _name.split(".")[0]
         __type = type_.split(".")[0]
         # find out more about this device
-        info = zc.get_service_info(type_, name)
-        svc: str = ""
-        prop: dict = {}
+        svc = ""
+        prop = {}
+        try:
+            info = zc.get_service_info(type_, name)
+        except Exception:
+            LOGGER.error(f"Exception getting service info for: {name}")
+            return
         if info:
             try:
                 prop = self.debyte(info.properties)
                 if info.addresses:
                     svc = ".".join(list(map(str, list(info.addresses[0]))))
-            except BaseException:
+            except Exception:
                 LOGGER.error(
                     f"Exception for device info: {info}\n {info.properties}\n {info.addresses}\n"
                 )
@@ -183,7 +196,7 @@ class ZcsListener(ServiceListener):
                 else:
                     # protect against empty keys
                     if _y:
-                        normdict[_y.decode("ascii")] = None
+                        normdict[_y.decode("ascii")] = ""
         return normdict
 
 
@@ -224,11 +237,13 @@ def discover_devices(search_time: float = 60.0) -> dict:
         LOGGER.debug(f"(   ) Listening for service: {_service}")
         browsers.append(ServiceBrowser(_zc, _service, _ls))
 
-    t0: float = time.time()
-    dt: float = 0.0
-    while dt < search_time:
-        dt = time.time() - t0
+    _t0: float = time.time()
+    while time.time() - _t0 < search_time:
+        time.sleep(1.0)
 
+    for _browser in browsers:
+        _browser.cancel()
+    time.sleep(1.0)
     _zc.close()
 
     if DEBUG:
