@@ -12,6 +12,7 @@ FIXME-SECURITY
 ### Visual Studio ###
 .vscode/
 
+### for testing purposes ###
 .local/
 
 ### Python ###
