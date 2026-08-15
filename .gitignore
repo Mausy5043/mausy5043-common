@@ -139,3 +139,6 @@ ENV/
 env.bak/
 venv.bak/
 .python-version
+
+# OpenCode AI
+session*.md
